@@ -1,0 +1,111 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions for Authentication & Custom Claims
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isCustomer() {
+      return isAuthenticated() && request.auth.token.role == 'customer';
+    }
+
+    function isPartner() {
+      return isAuthenticated() && request.auth.token.role == 'partner';
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.role == 'admin';
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // 1. Users collection (Customer profiles)
+    // Only the customer can read/write their own record.
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create, update: if isOwner(userId) && isCustomer();
+      allow delete: if isOwner(userId) || isAdmin();
+
+      // Customer Saved Addresses
+      match /addresses/{addressId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+
+    // 2. Partners collection
+    // Public read ONLY for approved partners. Private data only accessible by owner.
+    match /partners/{partnerId} {
+      allow read: if resource.data.status == 'approved' || isOwner(partnerId) || isAdmin();
+      allow create, update: if isOwner(partnerId) && isPartner();
+      allow delete: if isAdmin();
+
+      // Menu Items subcollection
+      match /menuItems/{menuId} {
+        allow read: if true; // Publicly readable for customer browsing
+        allow write: if isOwner(partnerId) && isPartner();
+      }
+
+      // Subscription Plans subcollection
+      match /plans/{planId} {
+        allow read: if true; // Publicly viewable by customers
+        allow write: if isOwner(partnerId) && isPartner();
+      }
+    }
+
+    // 3. Subscriptions collection
+    // Customers read their own; Partners read subscriptions for their kitchen.
+    // Writes happen strictly through Cloud Functions to guarantee carry-forward integrity.
+    match /subscriptions/{subscriptionId} {
+      allow read: if (isCustomer() && resource.data.userId == request.auth.uid) ||
+                    (isPartner() && resource.data.partnerId == request.auth.uid) ||
+                    isAdmin();
+      allow write: if false; // All subscription creates, skips, pauses go through Cloud Functions transactions!
+
+      match /slots/{slotId} {
+        allow read: if (isCustomer() && get(/databases/$(database)/documents/subscriptions/$(subscriptionId)).data.userId == request.auth.uid) ||
+                      (isPartner() && get(/databases/$(database)/documents/subscriptions/$(subscriptionId)).data.partnerId == request.auth.uid) ||
+                      isAdmin();
+        allow write: if false; // Strict Cloud Function management
+      }
+    }
+
+    // 4. Orders collection
+    // Customers read their orders; Partners read orders assigned to their kitchen.
+    // Client write is blocked for pricing/money security.
+    match /orders/{orderId} {
+      allow read: if (isCustomer() && resource.data.userId == request.auth.uid) ||
+                    (isPartner() && resource.data.partnerId == request.auth.uid) ||
+                    isAdmin();
+      allow create, update, delete: if false; // Written strictly by Cloud Functions with Razorpay verification
+    }
+
+    // 5. Reviews collection
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if isCustomer() && request.resource.data.userId == request.auth.uid;
+      allow update: if (isPartner() && resource.data.partnerId == request.auth.uid) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // 6. Global Settings & Coupons
+    match /settings/global {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /coupons/{couponCode} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // 7. Delivery Staff
+    match /deliveryStaff/{staffId} {
+      allow read, write: if isPartner() && resource.data.partnerId == request.auth.uid;
+    }
+  }
+}

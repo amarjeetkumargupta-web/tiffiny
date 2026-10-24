@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tiffiny Mobile App Live Interactive Preview</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #FF5200;
+      --primary-light: #FFF0EB;
+      --partner-primary: #0D9488;
+      --partner-light: #CCFBF1;
+      --sub-blue: #2563EB;
+      --sub-blue-light: #EFF6FF;
+      --veg: #16A34A;
+      --non-veg: #DC2626;
+      --bg: #F8FAFC;
+      --surface: #FFFFFF;
+      --text: #0F172A;
+      --text-muted: #64748B;
+      --border: #E2E8F0;
+    }
+
+    [data-theme="dark"] {
+      --bg: #090D16;
+      --surface: #131B2E;
+      --text: #F8FAFC;
+      --text-muted: #94A3B8;
+      --border: #27354A;
+      --primary-light: #331A0F;
+      --partner-light: #0D332D;
+      --sub-blue-light: #172554;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, sans-serif; user-select: none; }
+    body {
+      background: radial-gradient(circle at 10% 20%, #1E293B 0%, #0F172A 100%);
+      color: #F8FAFC;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Top Navbar */
+    .showcase-header {
+      height: 60px;
+      padding: 0 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      z-index: 100;
+    }
+
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      font-size: 20px;
+      color: #FFF;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .brand-badge {
+      background: var(--primary);
+      color: white;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 6px;
+      letter-spacing: 0.5px;
+    }
+
+    .top-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .pill-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #F8FAFC;
+      padding: 8px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .pill-btn:hover { background: rgba(255, 255, 255, 0.15); transform: translateY(-1px); }
+    .pill-btn.active { background: var(--primary); border-color: var(--primary); color: white; }
+
+    /* Main Showcase Stage */
+    .showcase-stage {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      gap: 40px;
+      overflow: hidden;
+    }
+
+    /* Side info cards */
+    .side-panel {
+      width: 320px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .info-card {
+      background: rgba(30, 41, 59, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(8px);
+      padding: 18px;
+      border-radius: 18px;
+    }
+    .info-card h3 { font-size: 14px; font-weight: 700; color: #38BDF8; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+    .info-card p { font-size: 12px; color: #94A3B8; line-height: 1.5; }
+    .feature-list { list-style: none; margin-top: 8px; font-size: 12px; color: #CBD5E1; }
+    .feature-list li { margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+    .feature-list li::before { content: "•"; color: var(--primary); font-size: 16px; }
+
+    /* iPhone Frame */
+    .phone-container {
+      width: 390px;
+      height: 780px;
+      background: #000;
+      border-radius: 54px;
+      padding: 12px;
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.15), inset 0 0 0 4px #262626;
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    /* Dynamic Island */
+    .dynamic-island {
+      position: absolute;
+      top: 22px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 32px;
+      background: #000;
+      border-radius: 20px;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 10px;
+      transition: width 0.3s ease;
+    }
+    .island-camera { width: 10px; height: 10px; background: #1a1a1a; border-radius: 50%; margin-left: auto; }
+
+    /* Screen Frame */
+    .phone-screen {
+      width: 100%;
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      border-radius: 42px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* iOS Status Bar */
+    .status-bar {
+      height: 44px;
+      padding: 0 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      font-weight: 600;
+      z-index: 900;
+    }
+
+    /* App Content Viewport */
+    .app-viewport {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    .app-viewport::-webkit-scrollbar { display: none; }
+
+    /* Interactive Screens */
+    .screen {
+      display: none;
+      flex-direction: column;
+      height: 100%;
+      animation: fadeIn 0.25s ease-out;
+    }
+    .screen.active { display: flex; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.98); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    /* Pressable Scale Effect */
+    .pressable {
+      cursor: pointer;
+      transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .pressable:active { transform: scale(0.96); }
+
+    /* SCREEN 1: Welcome Screen */
+    .welcome-screen {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      text-align: center;
+    }
+    .welcome-logo {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, #FF5200, #FFA100);
+      border-radius: 24px;
+      margin: 40px auto 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 38px;
+      box-shadow: 0 10px 24px rgba(255, 82, 0, 0.35);
+    }
+    .welcome-title { font-size: 30px; font-weight: 800; letter-spacing: -0.5px; }
+    .welcome-sub { font-size: 13px; color: var(--text-muted); margin-top: 8px; line-height: 1.45; }
+
+    .btn-customer {
+      background: var(--primary);
+      color: white;
+      padding: 16px;
+      border-radius: 16px;
+      font-size: 16px;
+      font-weight: 700;
+      box-shadow: 0 6px 18px rgba(255, 82, 0, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      border: none;
+      margin-top: auto;
+    }
+
+    .partner-door-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px;
+      margin-top: 24px;
+      text-align: left;
+    }
+    .partner-door-tag {
+      color: var(--partner-primary);
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+    .partner-door-desc { font-size: 11px; color: var(--text-muted); margin-bottom: 12px; }
+    .btn-partner {
+      background: var(--surface);
+      border: 1.5px solid var(--partner-primary);
+      color: var(--partner-primary);
+      padding: 12px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      width: 100%;
+      cursor: pointer;
+    }
+
+    /* SCREEN 2: Customer Home */
+    .home-header { padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; }
+    .addr-bar h4 { font-size: 14px; font-weight: 800; display: flex; align-items: center; gap: 4px; }
+    .addr-bar p { font-size: 11px; color: var(--text-muted); }
+    .search-pill {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      margin: 4px 18px 12px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .categories-bar {
+      display: flex;
+      gap: 8px;
+      padding: 0 18px 14px;
+      overflow-x: auto;
+    }
+    .categories-bar::-webkit-scrollbar { display: none; }
+    .cat-chip {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .cat-chip.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+    .promo-banner {
+      margin: 0 18px 16px;
+      padding: 16px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #1E3A8A, #2563EB);
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .partner-card {
+      margin: 0 18px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .card-banner {
+      height: 110px;
+      background: #FEF3C7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 44px;
+      position: relative;
+    }
+    .card-body { padding: 14px; }
+
+    /* SCREEN 3: Calendar / Meal Skip */
+    .cal-header { padding: 16px; border-bottom: 1px solid var(--border); }
+    .cal-slot {
+      margin: 0 18px 10px;
+      padding: 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .cal-slot.skipped { opacity: 0.6; text-decoration: line-through; background: rgba(0,0,0,0.03); }
+
+    /* SCREEN 4: Partner Kitchen View */
+    .kitchen-header {
+      background: var(--partner-primary);
+      color: white;
+      padding: 20px 18px;
+    }
+    .kitchen-batch-card {
+      margin: 14px 18px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+    }
+
+    /* Bottom Navigation Bar */
+    .bottom-tab-bar {
+      height: 64px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding-bottom: 8px;
+    }
+    .tab-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      color: var(--text-muted);
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .tab-item.active { color: var(--primary); font-weight: 700; }
+    .tab-item.partner-active { color: var(--partner-primary); font-weight: 700; }
+
+    /* Floating Cart Bar */
+    .cart-bar {
+      position: absolute;
+      bottom: 74px;
+      left: 14px;
+      right: 14px;
+      height: 52px;
+      background: var(--primary);
+      color: white;
+      border-radius: 14px;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      box-shadow: 0 8px 20px rgba(255, 82, 0, 0.4);
+      z-index: 50;
+      animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes slideUp {
+      from { transform: translateY(40px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+  </style>
+</head>
+<body data-theme="light">
+  <!-- Top Showcase Bar -->
+  <div class="showcase-header">
+    <div class="brand-logo">
+      <span>🍲</span> Tiffiny
+      <span class="brand-badge">FLUTTER + FIREBASE</span>
+    </div>
+    <div class="top-controls">
+      <button class="pill-btn active" id="btn-mode-customer" onclick="switchPerspective('customer')">👤 Customer App</button>
+      <button class="pill-btn" id="btn-mode-partner" onclick="switchPerspective('partner')">🏪 Partner Portal</button>
+      <button class="pill-btn" onclick="toggleTheme()">🌓 Dark Mode</button>
+      <a class="pill-btn" href="/web_admin/index.html" target="_blank">⚙️ Admin Console ↗</a>
+      <a class="pill-btn" href="/web_delivery/index.html" target="_blank">🛵 Delivery Portal ↗</a>
+    </div>
+  </div>
+
+  <!-- Showcase Content Stage -->
+  <div class="showcase-stage">
+    <!-- Left Feature Description Panel -->
+    <div class="side-panel">
+      <div class="info-card">
+        <h3>⚡ Realtime Role Isolation</h3>
+        <p>Customers and Mess Partners are strictly separated on Firebase Auth custom claims. Neither can log in to the other's door.</p>
+        <ul class="feature-list">
+          <li>Phone OTP (+91) validation</li>
+          <li>Cross-role collision prevention</li>
+          <li>Server-enforced role claim tokens</li>
+        </ul>
+      </div>
+
+      <div class="info-card">
+        <h3>📅 Smart Meal Skip & Carry-Forward</h3>
+        <p>Customers mark absent before 9:00 PM the previous evening. Skipped meals are automatically appended to the end of the subscription.</p>
+        <ul class="feature-list">
+          <li>9:00 PM previous day cut-off boundary</li>
+          <li>10/10 Jest unit tests passing</li>
+          <li>Direct deduction in kitchen prep view</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Central iPhone 15 Pro Device Simulator -->
+    <div class="phone-container">
+      <div class="dynamic-island">
+        <span style="font-size: 10px; color: white; font-weight: 700;">Tiffiny</span>
+        <div class="island-camera"></div>
+      </div>
+
+      <div class="phone-screen">
+        <!-- Status Bar -->
+        <div class="status-bar">
+          <span>9:41</span>
+          <span>5G 📶 100%</span>
+        </div>
+
+        <!-- Viewport -->
+        <div class="app-viewport">
+          <!-- 1. WELCOME SCREEN -->
+          <div class="screen active" id="screen-welcome">
+            <div class="welcome-screen">
+              <div class="welcome-logo">🍲</div>
+              <div class="welcome-title">Tiffiny</div>
+              <div class="welcome-sub">Homestyle tiffins & daily mess subscriptions delivered fresh to your doorstep</div>
+
+              <!-- Customer Entry Door -->
+              <button class="btn-customer pressable" onclick="navTo('customer-home')">
+                <span>🚴</span>
+                <span>Order Food</span>
+              </button>
+
+              <!-- Partner Entry Door -->
+              <div class="partner-door-box">
+                <div class="partner-door-tag">
+                  <span>🏪</span> For tiffin & mess owners
+                </div>
+                <div class="partner-door-desc">Manage kitchen orders, daily cooking forecasts, subscriber run-sheets.</div>
+                <button class="btn-partner pressable" onclick="navTo('partner-dash')">Partner Login</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. CUSTOMER HOME SCREEN -->
+          <div class="screen" id="screen-customer-home">
+            <div class="home-header">
+              <div class="addr-bar">
+                <h4>📍 Home ▾</h4>
+                <p>Koramangala 5th Block, Bengaluru</p>
+              </div>
+              <div style="font-size: 20px;" class="pressable" onclick="navTo('welcome')">🚪</div>
+            </div>
+
+            <div class="search-pill pressable">
+              <span>🔍</span>
+              <span>Search "Gujarati Thali", "South Mess"...</span>
+            </div>
+
+            <div class="categories-bar">
+              <div class="cat-chip active">All</div>
+              <div class="cat-chip">Pure Veg</div>
+              <div class="cat-chip">Daily Mess</div>
+              <div class="cat-chip">Monthly Pass</div>
+              <div class="cat-chip">Thali</div>
+            </div>
+
+            <!-- Promo Banner -->
+            <div class="promo-banner">
+              <div>
+                <div style="font-size: 10px; font-weight: 800; background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 4px; display: inline-block;">MONTHLY PASS</div>
+                <div style="font-size: 16px; font-weight: 800; margin-top: 4px;">Save 40% with Monthly Tiffins</div>
+                <div style="font-size: 11px; opacity: 0.8; margin-top: 2px;">Skip anytime with 1-click carry forward</div>
+              </div>
+              <div style="font-size: 32px;">🍱</div>
+            </div>
+
+            <!-- Partner Card 1 -->
+            <div class="partner-card pressable" onclick="navTo('customer-store')">
+              <div class="card-banner">
+                🥘
+                <span style="position: absolute; top: 10px; left: 10px; background: #2563EB; color: white; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 6px;">Subscription Available</span>
+                <span style="position: absolute; top: 10px; right: 10px; background: white; border: 1.5px solid #16A34A; border-radius: 4px; padding: 2px 4px; font-size: 8px; color: #16A34A;">🟢 VEG</span>
+              </div>
+              <div class="card-body">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <strong style="font-size: 15px;">Annapurna Homely Tiffins</strong>
+                  <span style="background: #16A34A; color: white; font-size: 11px; font-weight: 800; padding: 2px 6px; border-radius: 6px;">4.8 ★</span>
+                </div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">North Indian • Gujarati Thali • 20 mins</div>
+                <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 12px;">
+                  <span>1.8 km away</span>
+                  <strong style="color: var(--primary);">₹85 / meal</strong>
+                </div>
+              </div>
+            </div>
+
+            <!-- Partner Card 2 -->
+            <div class="partner-card pressable" onclick="navTo('customer-store')">
+              <div class="card-banner" style="background: #E0E7FF;">
+                🍛
+                <span style="position: absolute; top: 10px; left: 10px; background: #2563EB; color: white; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 6px;">Subscription Available</span>
+                <span style="position: absolute; top: 10px; right: 10px; background: white; border: 1.5px solid #16A34A; border-radius: 4px; padding: 2px 4px; font-size: 8px; color: #16A34A;">🟢 VEG</span>
+              </div>
+              <div class="card-body">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <strong style="font-size: 15px;">Dakshin Mess & Tiffin Box</strong>
+                  <span style="background: #16A34A; color: white; font-size: 11px; font-weight: 800; padding: 2px 6px; border-radius: 6px;">4.6 ★</span>
+                </div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">South Indian Meals • Sambar Rice</div>
+                <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 12px;">
+                  <span>1.2 km away</span>
+                  <strong style="color: var(--primary);">₹70 / meal</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. RESTAURANT STOREFRONT & MENU -->
+          <div class="screen" id="screen-customer-store">
+            <div style="padding: 14px 18px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border);">
+              <span class="pressable" onclick="navTo('customer-home')" style="font-size: 18px;">←</span>
+              <div>
+                <strong style="font-size: 15px;">Annapurna Homely Tiffins</strong>
+                <div style="font-size: 11px; color: var(--text-muted);">4.8 ★ (520 reviews) • FSSAI Verified</div>
+              </div>
+            </div>
+
+            <div style="padding: 14px 18px;">
+              <!-- Plan Card -->
+              <div style="background: var(--sub-blue-light); border: 1.5px solid var(--sub-blue); border-radius: 14px; padding: 14px; margin-bottom: 16px;">
+                <div style="display: flex; justify-content: space-between;">
+                  <strong style="color: var(--sub-blue); font-size: 14px;">Monthly Lunch Pass (30 Days)</strong>
+                  <span style="background: #10B981; color: white; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 6px;">Save ₹1,200</span>
+                </div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Delivered daily 12:30 PM • Up to 10 skips allowed</div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                  <strong style="font-size: 18px; color: var(--sub-blue);">₹2,400</strong>
+                  <button class="pressable" onclick="navTo('customer-cal')" style="background: var(--sub-blue); color: white; border: none; padding: 8px 14px; border-radius: 10px; font-weight: 700; font-size: 12px;">View Calendar</button>
+                </div>
+              </div>
+
+              <!-- Menu Items -->
+              <div style="font-weight: 700; font-size: 15px; margin-bottom: 12px;">Daily Menu</div>
+
+              <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <div style="font-size: 14px; font-weight: 700;">Special Homely Thali</div>
+                  <div style="font-size: 13px; font-weight: 700; color: var(--primary); margin-top: 2px;">₹140</div>
+                  <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">4 Phulkas, Dal Tadka, Paneer Sabzi, Rice</div>
+                </div>
+                <button class="pressable" onclick="addToCart('Special Homely Thali', 140)" style="background: var(--primary-light); color: var(--primary); border: 1.5px solid var(--primary); padding: 8px 16px; border-radius: 10px; font-weight: 800; font-size: 12px;">+ ADD</button>
+              </div>
+
+              <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 12px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <div style="font-size: 14px; font-weight: 700;">Desi Ghee Phulka (Pack of 4)</div>
+                  <div style="font-size: 13px; font-weight: 700; color: var(--primary); margin-top: 2px;">₹40</div>
+                  <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Fresh soft whole wheat rotis</div>
+                </div>
+                <button class="pressable" onclick="addToCart('Ghee Phulka Pack', 40)" style="background: var(--primary-light); color: var(--primary); border: 1.5px solid var(--primary); padding: 8px 16px; border-radius: 10px; font-weight: 800; font-size: 12px;">+ ADD</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. MEAL DELIVERY CALENDAR -->
+          <div class="screen" id="screen-customer-cal">
+            <div class="cal-header">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <span class="pressable" onclick="navTo('customer-store')" style="font-size: 18px;">←</span>
+                <strong style="font-size: 16px;">Meal Delivery Calendar</strong>
+              </div>
+              <div style="background: var(--sub-blue-light); color: var(--sub-blue); font-size: 12px; font-weight: 700; padding: 8px 12px; border-radius: 10px; margin-top: 10px;">
+                Meals left: <span id="cal-left">18</span> | Skipped: <span id="cal-skipped">3</span> | Extended to: 15 Nov
+              </div>
+            </div>
+
+            <div style="padding: 12px 18px 4px; font-size: 11px; color: var(--text-muted);">
+              Cut-off: Mark absent before 9:00 PM previous evening.
+            </div>
+
+            <!-- Today (Locked) -->
+            <div class="cal-slot">
+              <div style="text-align: center; width: 44px;">
+                <div style="font-size: 16px; font-weight: 800; color: var(--text-muted);">24</div>
+                <div style="font-size: 10px; color: var(--text-muted);">Today</div>
+              </div>
+              <div style="flex: 1;">
+                <div style="font-size: 13px; font-weight: 700;">Lunch Delivery</div>
+                <div style="font-size: 11px; color: #DC2626;">Cut-off passed (In preparation)</div>
+              </div>
+              <span style="font-size: 10px; font-weight: 700; background: #F1F5F9; color: #64748B; padding: 4px 8px; border-radius: 6px;">LOCKED</span>
+            </div>
+
+            <!-- Tomorrow (Eligible) -->
+            <div class="cal-slot" id="slot-tomorrow">
+              <div style="text-align: center; width: 44px;">
+                <div style="font-size: 16px; font-weight: 800; color: var(--primary);">25</div>
+                <div style="font-size: 10px; color: var(--primary);">Sun</div>
+              </div>
+              <div style="flex: 1;">
+                <div style="font-size: 13px; font-weight: 700;" id="slot-text-tomorrow">Lunch Delivery</div>
+                <div style="font-size: 11px; color: var(--text-muted);">12:30 PM - 1:30 PM</div>
+              </div>
+              <button class="pressable" onclick="toggleSkip('tomorrow')" id="btn-skip-tomorrow" style="background: white; border: 1.5px solid #DC2626; color: #DC2626; padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 11px;">Mark Absent</button>
+            </div>
+
+            <!-- Day After Tomorrow (Skipped) -->
+            <div class="cal-slot skipped" id="slot-day2">
+              <div style="text-align: center; width: 44px;">
+                <div style="font-size: 16px; font-weight: 800;">26</div>
+                <div style="font-size: 10px;">Mon</div>
+              </div>
+              <div style="flex: 1;">
+                <div style="font-size: 13px; font-weight: 700;">Lunch (Carried Forward)</div>
+                <div style="font-size: 11px; color: #D97706;">Added to end of plan</div>
+              </div>
+              <span style="font-size: 10px; font-weight: 700; background: #FEF3C7; color: #B45309; padding: 4px 8px; border-radius: 6px;">SKIPPED</span>
+            </div>
+          </div>
+
+          <!-- 5. PARTNER DASHBOARD & KITCHEN VIEW -->
+          <div class="screen" id="screen-partner-dash">
+            <div class="kitchen-header">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <div style="font-size: 11px; background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 4px; display: inline-block;">KITCHEN PORTAL</div>
+                  <div style="font-size: 18px; font-weight: 800; margin-top: 4px;">Annapurna Kitchen</div>
+                </div>
+                <div class="pressable" onclick="navTo('welcome')" style="font-size: 20px;">🚪</div>
+              </div>
+
+              <!-- Metrics -->
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px;">
+                <div style="background: rgba(255,255,255,0.15); padding: 10px; border-radius: 10px;">
+                  <div style="font-size: 10px;">Today's Meals</div>
+                  <div style="font-size: 20px; font-weight: 800;">78 Portions</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.15); padding: 10px; border-radius: 10px;">
+                  <div style="font-size: 10px;">Skips (Absent)</div>
+                  <div style="font-size: 20px; font-weight: 800; color: #FEF08A;">-6 Deducted</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- FSSAI Review Banner -->
+            <div style="margin: 14px 18px 0; background: #FEF3C7; border: 1px solid #F59E0B; border-radius: 12px; padding: 12px;">
+              <strong style="color: #78350F; font-size: 12px;">FSSAI Under Review</strong>
+              <div style="font-size: 11px; color: #92400E; margin-top: 2px;">We usually respond within 48 hours.</div>
+            </div>
+
+            <!-- Kitchen Batch Preparation -->
+            <div class="kitchen-batch-card">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <strong style="font-size: 14px;">Lunch Batch (12:00 PM)</strong>
+                <span style="background: var(--partner-light); color: var(--partner-primary); font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 6px;">48 Portions</span>
+              </div>
+              <div style="font-size: 11px; color: var(--text-muted); margin-top: 6px;">
+                42 Subscribers - 4 Skips + 10 Orders
+              </div>
+              <div style="display: flex; gap: 8px; margin-top: 12px;">
+                <button class="pressable" onclick="alert('Batch marked cooking!')" style="flex: 1; background: var(--partner-primary); color: white; border: none; padding: 8px; border-radius: 8px; font-weight: 700; font-size: 11px;">Start Cooking</button>
+                <a class="pressable" href="/web_delivery/index.html" target="_blank" style="flex: 1; text-align: center; text-decoration: none; background: #F1F5F9; color: var(--partner-primary); border: 1px solid var(--border); padding: 8px; border-radius: 8px; font-weight: 700; font-size: 11px;">Dispatch Sheet</a>
+              </div>
+            </div>
+
+            <!-- Live Order Queue -->
+            <div class="kitchen-batch-card">
+              <div style="display: flex; justify-content: space-between;">
+                <strong style="font-size: 13px;">Incoming Order #TIF-9042</strong>
+                <span style="color: var(--primary); font-size: 11px; font-weight: 700;">2m ago</span>
+              </div>
+              <div style="font-size: 11px; margin-top: 4px;">2x Deluxe Thali • 1x Extra Phulka</div>
+              <div style="display: flex; gap: 8px; margin-top: 10px;">
+                <button class="pressable" onclick="alert('Order accepted!')" style="flex: 1; background: #16A34A; color: white; border: none; padding: 8px; border-radius: 8px; font-weight: 700; font-size: 11px;">Accept (₹290)</button>
+                <button class="pressable" onclick="alert('Order rejected.')" style="flex: 1; background: #FEE2E2; color: #DC2626; border: none; padding: 8px; border-radius: 8px; font-weight: 700; font-size: 11px;">Reject</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sticky Bottom Cart Pill -->
+        <div class="cart-bar" id="cart-pill">
+          <div>
+            <div style="font-size: 10px; opacity: 0.8; font-weight: 700;" id="cart-qty">1 ITEM ADDED</div>
+            <div style="font-size: 16px; font-weight: 800;" id="cart-total">₹140</div>
+          </div>
+          <div class="pressable" onclick="alert('Order Placed via Razorpay UPI Mock!')" style="font-weight: 800; font-size: 13px;">View Cart →</div>
+        </div>
+
+        <!-- Bottom Tab Bar -->
+        <div class="bottom-tab-bar" id="bottom-tabs">
+          <div class="tab-item active" onclick="navTo('customer-home')">
+            <span style="font-size: 18px;">🏠</span>
+            <span>Home</span>
+          </div>
+          <div class="tab-item" onclick="navTo('customer-store')">
+            <span style="font-size: 18px;">🔍</span>
+            <span>Search</span>
+          </div>
+          <div class="tab-item" onclick="navTo('customer-cal')">
+            <span style="font-size: 18px;">📅</span>
+            <span>Passes</span>
+          </div>
+          <div class="tab-item" onclick="alert('My Orders: 1 in preparation')">
+            <span style="font-size: 18px;">🧾</span>
+            <span>Orders</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Side Status Panel -->
+    <div class="side-panel">
+      <div class="info-card">
+        <h3>🛵 Zero-Login WhatsApp Dispatch</h3>
+        <p>Delivery boys do not need any platform account. Partners generate a secure 1-click link to mark deliveries.</p>
+        <button class="pill-btn pressable" style="width: 100%; justify-content: center; margin-top: 8px;" onclick="window.open('/web_delivery/index.html', '_blank')">Open Delivery Run-Sheet ↗</button>
+      </div>
+
+      <div class="info-card">
+        <h3>🛡️ FSSAI & Admin KYC Queue</h3>
+        <p>Before any tiffin partner is visible to customers, platform admins review their 14-digit FSSAI certificate.</p>
+        <button class="pill-btn pressable" style="width: 100%; justify-content: center; margin-top: 8px;" onclick="window.open('/web_admin/index.html', '_blank')">Open Admin KYC Queue ↗</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let cartCount = 0;
+    let cartTotal = 0;
+
+    function navTo(screenId) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      const target = document.getElementById('screen-' + screenId);
+      if (target) target.classList.add('active');
+
+      const tabs = document.getElementById('bottom-tabs');
+      if (screenId.startsWith('partner')) {
+        tabs.style.display = 'none';
+      } else if (screenId === 'welcome') {
+        tabs.style.display = 'none';
+      } else {
+        tabs.style.display = 'flex';
+      }
+    }
+
+    function switchPerspective(role) {
+      document.getElementById('btn-mode-customer').classList.toggle('active', role === 'customer');
+      document.getElementById('btn-mode-partner').classList.toggle('active', role === 'partner');
+      if (role === 'customer') {
+        navTo('customer-home');
+      } else {
+        navTo('partner-dash');
+      }
+    }
+
+    function toggleTheme() {
+      const current = document.body.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.body.setAttribute('data-theme', next);
+    }
+
+    function addToCart(item, price) {
+      cartCount++;
+      cartTotal += price;
+      document.getElementById('cart-qty').innerText = cartCount + (cartCount === 1 ? ' ITEM ADDED' : ' ITEMS ADDED');
+      document.getElementById('cart-total').innerText = '₹' + cartTotal;
+      document.getElementById('cart-pill').style.display = 'flex';
+    }
+
+    function toggleSkip(slotId) {
+      const slot = document.getElementById('slot-tomorrow');
+      const btn = document.getElementById('btn-skip-tomorrow');
+      const text = document.getElementById('slot-text-tomorrow');
+      const skippedCount = document.getElementById('cal-skipped');
+
+      if (slot.classList.contains('skipped')) {
+        slot.classList.remove('skipped');
+        btn.innerText = 'Mark Absent';
+        btn.style.borderColor = '#DC2626';
+        btn.style.color = '#DC2626';
+        text.innerText = 'Lunch Delivery';
+        skippedCount.innerText = '3';
+      } else {
+        slot.classList.add('skipped');
+        btn.innerText = 'Resumed';
+        btn.style.borderColor = '#2563EB';
+        btn.style.color = '#2563EB';
+        text.innerText = 'Lunch (Carried Forward)';
+        skippedCount.innerText = '4';
+        alert('Meal marked absent! Subscription end date automatically extended by 1 day.');
+      }
+    }
+  </script>
+</body>
+</html>
